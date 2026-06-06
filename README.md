@@ -1,104 +1,97 @@
-# ESP Flasher
+# ESP-Flasher
 
-A browser-based tool for flashing firmware and monitoring ESP32 boards — no software installation or drivers required.
+**Browser-based firmware flasher for ESP32 — and the bridge between git-native AI agents and physical hardware.**
 
-## What is ESP Flasher?
+## What It Does
 
-ESP Flasher lets you flash `.bin` firmware files onto ESP32 development boards and monitor their serial output, all from your web browser. It works with both original Espressif boards and clone boards using common USB-UART bridges like CP2102, CH340, and FTDI.
+ESP-Flasher lets you flash `.bin` firmware files onto ESP32 boards and monitor their serial output, all from your web browser. No software installation. No drivers. Just open Chrome, connect, and flash.
+
+## The Bigger Picture
+
+This fork is part of the **[SuperInstance Oxide Stack](https://github.com/SuperInstance/cuda-oxide/blob/main/FLUX_TO_PTX.md)** — a distributed compute runtime where AI agents can program physical hardware through git-native skill swapping.
+
+**Read the full architecture**: [AGENT_ARCHITECTURE.md](./AGENT_ARCHITECTURE.md)
+
+```
+User → AI Agent → ESP-Flasher (browser) → ESP32 workers
+                ↓
+        Git repos = skill library
+        Each repo compiles to .bin firmware
+        Agent hot-swaps skills based on task
+```
+
+### Use Cases
+
+- **Smart Agriculture**: Agent monitors weather + soil → hotloads irrigation skill → verifies results
+- **Home Automation**: "Movie night" → agent flashes dim/AV/blind skills to 3 ESP32s
+- **Research Labs**: Hot-swap data collection → calibration → analysis skills between experiment runs
+- **Industrial IoT**: Central agent assigns firmware to 50+ ESP32 workers based on production schedule
+- **Education**: Students write code → agent compiles and flashes → iterate
+
+### Why It Matters
+
+The ESP-Flasher is the **cudaclaw of microcontrollers** — it persists and loads executable images to workers, except the "GPU" is an ESP32 and the "kernel" is bare-metal firmware. Combined with [ternary-esp32-firmware](https://github.com/SuperInstance/ternary-esp32-firmware) (Z₃ operations in 279 bytes, 8ns lookups), you get a complete system where AI agents physically interact with the world.
+
+## Features
+
+- 🌐 **Zero install** — runs entirely in the browser (Chrome/Edge)
+- ⚡ **Real-time serial monitor** with search, auto-scroll, ASCII/HEX/BIN
+- 🔌 **Multi-board support** — ESP32, S2, S3, C3, C6 + clones (CP2102, CH340, FTDI)
+- 📦 **Drag-and-drop** firmware flashing
+- 🤖 **Agent-ready** — Web Serial API enables programmatic control from AI agents
 
 ## Supported Boards
 
-- **ESP32** (all variants)
-- **ESP32-S2** (Native USB)
-- **ESP32-S3** (Native USB)
-- **ESP32-C3** (USB-JTAG / Native USB)
-- **ESP32-C6** (USB-JTAG)
-- Clone boards with **CP2102**, **CH340**, **FTDI**, or **PL2303** bridges
+| Board | Connection | Notes |
+|-------|-----------|-------|
+| ESP32 | USB-UART | Original Espressif + clones |
+| ESP32-S2 | Native USB | |
+| ESP32-S3 | Native USB | |
+| ESP32-C3 | USB-JTAG / Native USB | |
+| ESP32-C6 | USB-JTAG | |
 
-## How to Use
+## Quick Start
 
-### 1. Open the Tool
-
-Open `index.html` in **Google Chrome** or **Microsoft Edge** (any Chromium-based browser that supports Web Serial API). You can serve it locally using any HTTP server:
-
-```
+```bash
+# Serve locally
 npx serve .
+
+# Or just open index.html in Chrome
 ```
 
-Or simply open it with Live Server in VS Code.
+1. Click **Connect** → select your board's serial port
+2. Drag a `.bin` file into the Flash Firmware section
+3. Click **Flash**
+4. Monitor output in real-time terminal
 
-### 2. Connect Your Board
+## Connection to the Oxide Stack
 
-1. Plug your ESP32 board into a USB port.
-2. Click the **Connect** button in the top-left corner.
-3. A browser dialog will appear — select your board's serial port (e.g., `CP2102 USB to UART Bridge`).
-4. The tool will automatically detect your board and display its chip info in the left sidebar.
+| Layer | ESP-Flasher Analog |
+|-------|-------------------|
+| **open-parallel** (async runtime) | Browser event loop + Web Serial |
+| **pincher** (intent→compile) | Agent selects skill → compiles firmware |
+| **flux-core** (bytecode VM) | ESP32 executes compiled firmware |
+| **cuda-oxide** (compiler) | Cross-compiler: Rust/C → Xtensa .bin |
+| **cudaclaw** (persistent kernels) | Firmware in git, cached locally |
 
-### 3. Flash Firmware
+## Related Projects
 
-1. In the **Flash Firmware** section on the left sidebar, drag and drop a `.bin` file or click to browse.
-2. Set the **flash address** (default is `0x0` — this works for most cases).
-3. Click the **Flash** button.
-4. The terminal will show flashing progress in real-time.
+- [ternary-esp32-firmware](https://github.com/SuperInstance/ternary-esp32-firmware) — Bare-metal Z₃ operations (279 bytes)
+- [ternary-hotswap-inference](https://github.com/SuperInstance/ternary-hotswap-inference) — Atomic model swapping
+- [oxide-checkpoint](https://github.com/SuperInstance/oxide-checkpoint) — Kernel execution checkpointing
+- [cuda-oxide](https://github.com/SuperInstance/cuda-oxide) — The full Flux→PTX compiler
 
-### 4. Serial Monitor
+## Open Questions
 
-Once connected, the **Terminal** area in the center shows all serial output from your board in real-time. You can:
+1. Can firmware swap time reach <1 second for real-time control?
+2. Can multiple skills coexist on one ESP32 via FreeRTOS task swapping?
+3. How does the ESP32 report structured results back to the agent?
+4. Can ESP32s cache multiple firmware images and self-swap autonomously?
 
-- **Send commands** using the input bar at the bottom (supports ASCII, HEX, and BIN formats).
-- **Search** through terminal output using the built-in search bar.
-- **Auto-scroll** to follow new output or pause to inspect older messages.
-- **Timestamps** can be toggled on/off.
-- **Clear** the terminal with the trash icon.
-- **Repeat send** — enable the Repeat toggle to auto-send a command at a set interval.
+## Credits
 
-### 5. Serial Settings
+Forked from [bharanidharanrangaraj/ESP-Flasher](https://github.com/bharanidharanrangaraj/ESP-Flasher).
 
-Use the settings bar at the top to configure:
+## License
 
-- **Baud Rate** — 115200 (default), 9600, 57600, etc.
-- **Data Bits** — 8 (default)
-- **Parity** — None (default)
-- **Stop Bits** — 1 (default)
-- **Flow Control** — None (default)
-
-### 6. Device Info
-
-The left sidebar shows detected device information:
-
-| Field        | Description                           |
-|-------------|---------------------------------------|
-| Chip         | Chip family and revision              |
-| Architecture | Xtensa or RISC-V                      |
-| Cores        | Number of CPU cores                   |
-| MAC          | Hardware MAC address                  |
-| Flash        | Flash memory size                     |
-| USB Bridge   | USB-to-serial chip (CP2102, CH340...) |
-| VID:PID      | USB Vendor and Product IDs            |
-
-### 7. Export Data
-
-Click the **Export** button (download icon in the header) to save your terminal session as a text file.
-
-## Browser Requirements
-
-| Browser         | Supported |
-|-----------------|-----------|
-| Google Chrome   | ✅         |
-| Microsoft Edge  | ✅         |
-| Opera           | ✅         |
-| Firefox         | ❌         |
-| Safari          | ❌         |
-
-> Web Serial API is required. Only Chromium-based browsers support it.
-
-## Tips
-
-- **Auto-detection works best** when the board has a proper auto-reset circuit (most dev boards do).
-- **Clone boards** — If auto-reset doesn't work, hold the **BOOT** button on your board while clicking Connect.
-- **Native USB boards** (ESP32-S2/S3/C3) — The chip is identified instantly from USB descriptors without needing bootloader mode.
-- **Dark/Light mode** — Toggle the theme using the moon/sun icon in the top-right corner.
-
-## Author
-
-**Bharani Dharan Rangaraj**
+See upstream repository.
